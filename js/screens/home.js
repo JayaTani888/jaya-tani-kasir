@@ -31,7 +31,8 @@ export function HomeScreen() {
     h('div', { class: 'links' },
       h('a', { class: 'link-btn', href: '#/riwayat' }, icon('history'), 'Riwayat Transaksi'),
       h('a', { class: 'link-btn', href: '#/pengaturan' }, icon('settings'), 'Pengaturan')),
-    count);
+    count,
+    h('p', { class: 'credit' }, 'Designed by Sinnu Group (Tama & Ani)'));
 
   const offs = [onSync(update), onChange(update)];
   update();
