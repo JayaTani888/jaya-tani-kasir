@@ -150,7 +150,7 @@ export function StokScreen() {
 
   return {
     title: 'Update Stok Barang',
-    el: h('div', { class: 'form page-stok' }, picker.tipe.el, picker.nama.el, detail),
+    el: h('div', { class: 'form page-stok' }, picker.tipeRow, picker.nama.el, detail),
     destroy: off,
   };
 }
