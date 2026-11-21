@@ -143,8 +143,8 @@ export function KasirScreen() {
     saveCart();
     renderCart();
     toast(`${it.nama} ditambahkan`, 'ok', 1500);
-    picker.clear();
-    if (window.matchMedia('(pointer: fine)').matches) picker.nama.focus();
+    // Tipe ikut dikosongkan agar barang berikutnya bisa langsung dicari dari semua tipe.
+    picker.reset({ focus: window.matchMedia('(pointer: fine)').matches });
   }
 
   // ---- Daftar belanja ----
@@ -281,7 +281,7 @@ export function KasirScreen() {
   }
 
   const left = h('section', { class: 'kasir-form form' },
-    picker.tipe.el,
+    picker.tipeRow,
     picker.nama.el,
     detail,
     h('div', { class: 'actions start' }, h('button', { type: 'button', class: 'btn btn-save', onclick: add }, 'Tambah')));
