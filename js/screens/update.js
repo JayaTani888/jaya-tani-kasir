@@ -19,7 +19,7 @@ export function UpdateScreen() {
     root.replaceChildren(
       h('div', { class: 'form' },
         h('p', { class: 'muted lead' }, 'Pilih barang yang datanya ingin diubah.'),
-        picker.tipe.el,
+        picker.tipeRow,
         picker.nama.el,
         h('div', { class: 'actions start' }, h('button', { type: 'button', class: 'btn btn-pick', onclick: pilih }, 'Pilih'))),
     );
