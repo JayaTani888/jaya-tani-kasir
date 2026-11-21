@@ -1,7 +1,7 @@
 // Pemilih barang: Tipe Barang (penyaring) + Nama Barang.
 // Barang dengan nama sama tapi kemasan berbeda dibedakan lewat keterangan kemasan & harga.
 
-import { combobox } from './ui.js';
+import { combobox, h, icon } from './ui.js';
 import { state, activeItems, distinct, getStok } from './store.js';
 import { norm, fullName, variantLabel, priceLabel, stokText } from './format.js';
 
@@ -49,9 +49,28 @@ export function itemPicker({ onPick, tipeRequired = false, showStock = true } = 
     },
   });
 
+  // Kosongkan Tipe + Nama sekaligus agar penyaring tipe tidak "tersangkut".
+  function reset({ focus = false } = {}) {
+    tipe.clear();
+    tipe.setError(null);
+    nama.clear();
+    nama.setError(null);
+    set(null);
+    if (focus) nama.focus();
+  }
+
+  const resetBtn = h('button', {
+    type: 'button',
+    class: 'btn btn-ghost btn-sm filter-reset',
+    title: 'Hapus pilihan Tipe & Nama Barang',
+    onclick: () => reset({ focus: true }),
+  }, icon('refresh', 18), 'Reset');
+
   return {
     tipe,
     nama,
+    /** Baris Tipe Barang + tombol Reset. */
+    tipeRow: h('div', { class: 'filter-row' }, tipe.el, resetBtn),
     get item() {
       return picked ? state.items.get(picked.id) || picked : null;
     },
@@ -59,5 +78,6 @@ export function itemPicker({ onPick, tipeRequired = false, showStock = true } = 
       nama.clear();
       set(null);
     },
+    reset,
   };
 }
