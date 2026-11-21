@@ -1,7 +1,7 @@
 // Service worker: menyimpan file aplikasi agar tetap bisa dibuka tanpa internet.
 // PENTING: naikkan VERSION setiap kali file aplikasi diperbarui di hosting,
 // supaya HP mengunduh versi baru.
-const VERSION = '1.0.2';
+const VERSION = '1.0.3';
 const CACHE = `jaya-tani-kasir-${VERSION}`;
 const ASSETS = [
   './',
