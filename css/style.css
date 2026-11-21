@@ -171,6 +171,11 @@ main {
 .link-btn svg { color: var(--primary); flex: 0 0 auto; }
 .foot { margin-top: 18px; }
 
+/* Tipe Barang + tombol Reset dalam satu baris */
+.filter-row { display: flex; gap: 8px; align-items: stretch; }
+.filter-row > :first-child { flex: 1 1 auto; min-width: 0; }
+.filter-row .filter-reset { flex: 0 0 auto; align-self: stretch; height: auto; min-height: 0; padding: 0 14px; border-radius: 12px; }
+
 /* Tulisan kredit di pojok kanan bawah beranda */
 .credit {
   position: fixed;
