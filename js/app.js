@@ -56,27 +56,16 @@ function updateChip() {
 function registerSW() {
   if (!('serviceWorker' in navigator)) return;
   const banner = document.getElementById('update-banner');
-  let reg = null;
-  let userAsked = false;
-  banner.querySelector('button').addEventListener('click', () => {
-    userAsked = true;
-    reg?.waiting?.postMessage('SKIP_WAITING');
-  });
+  // Versi baru langsung aktif di latar belakang; pengguna cukup memuat ulang.
+  const hadController = !!navigator.serviceWorker.controller;
+  banner.querySelector('button').addEventListener('click', () => location.reload());
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (userAsked) location.reload();
+    if (hadController) banner.hidden = false;
   });
   navigator.serviceWorker
     .register('sw.js')
     .then((r) => {
-      reg = r;
-      const show = () => { banner.hidden = false; };
-      if (r.waiting && navigator.serviceWorker.controller) show();
-      r.addEventListener('updatefound', () => {
-        const nw = r.installing;
-        nw?.addEventListener('statechange', () => {
-          if (nw.state === 'installed' && navigator.serviceWorker.controller) show();
-        });
-      });
+      if (r.waiting) r.waiting.postMessage('SKIP_WAITING'); // versi lama yang masih menunggu
     })
     .catch((e) => console.warn('Service worker gagal didaftarkan:', e));
 }
