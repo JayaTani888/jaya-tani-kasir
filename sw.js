@@ -1,11 +1,13 @@
 // Service worker: menyimpan file aplikasi agar tetap bisa dibuka tanpa internet.
 // PENTING: naikkan VERSION setiap kali file aplikasi diperbarui di hosting,
 // supaya HP mengunduh versi baru.
-const VERSION = '1.0.3';
+const VERSION = '1.0.4';
 const CACHE = `jaya-tani-kasir-${VERSION}`;
+// Halaman utama disimpan dengan kunci './' (bukan 'index.html'), karena
+// sebagian hosting (mis. Cloudflare Pages) mengalihkan /index.html ke /.
+const PAGE = './';
 const ASSETS = [
-  './',
-  'index.html',
+  PAGE,
   'manifest.webmanifest',
   'css/style.css',
   'js/app.js',
@@ -30,11 +32,33 @@ const ASSETS = [
   'icons/logo-jaya-tani.png',
 ];
 
+// Jawaban hasil pengalihan (redirect) tidak boleh dipakai untuk membuka halaman:
+// browser akan menolaknya (ERR_FAILED). Salin menjadi jawaban biasa.
+async function clean(res) {
+  if (!res || !res.redirected) return res;
+  const body = await res.blob();
+  return new Response(body, { status: res.status, statusText: res.statusText, headers: res.headers });
+}
+
 // Saat uji di komputer sendiri (localhost), ambil versi terbaru dulu.
 const DEV = ['localhost', '127.0.0.1'].includes(self.location.hostname);
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));
+  e.waitUntil(
+    (async () => {
+      const cache = await caches.open(CACHE);
+      await Promise.all(
+        ASSETS.map(async (a) => {
+          const res = await fetch(a, { cache: 'no-cache' });
+          if (!res.ok) throw new Error(`Gagal menyimpan ${a}: ${res.status}`);
+          await cache.put(a, await clean(res));
+        }),
+      );
+      // Langsung aktif (tidak menunggu semua tab ditutup), agar versi lama yang
+      // bermasalah segera tergantikan. Aplikasi akan menawarkan "Muat ulang".
+      await self.skipWaiting();
+    })(),
+  );
 });
 
 self.addEventListener('activate', (e) => {
@@ -61,21 +85,22 @@ self.addEventListener('fetch', (e) => {
   e.respondWith(
     (async () => {
       const cache = await caches.open(CACHE);
-      const key = req.mode === 'navigate' ? 'index.html' : req;
+      const nav = req.mode === 'navigate';
+      const key = nav ? PAGE : req;
       if (DEV) {
         try {
-          const res = await fetch(req);
+          const res = await clean(await fetch(req));
           if (res.ok) cache.put(key, res.clone());
           return res;
         } catch {
           const hit = await cache.match(key, { ignoreSearch: true });
-          return hit || Response.error();
+          return (await clean(hit)) || Response.error();
         }
       }
       const hit = await cache.match(key, { ignoreSearch: true });
-      if (hit) return hit;
+      if (hit) return clean(hit);
       try {
-        const res = await fetch(req);
+        const res = await clean(await fetch(req));
         if (res.ok && res.type === 'basic') cache.put(key, res.clone());
         return res;
       } catch {
