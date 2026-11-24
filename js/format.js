@@ -59,10 +59,24 @@ export function fullName(it) {
   return v ? `${it.nama} — ${v}` : it.nama;
 }
 
+/** Berat/volume per kemasan, mis. "1 Liter" atau "25 kg". Kosong bila tidak diisi. */
+export function metricLabel(it) {
+  if (!it || !it.berkemasan || !it.beratVolume) return '';
+  return `${fmtNum(it.beratVolume)}${it.satuan ? ' ' + it.satuan : ''}`;
+}
+
+/** Pembeda bila ada barang lain dengan nama + ukuran yang sama: kemasannya, atau "per kg". */
+export function variantTag(it) {
+  return it.berkemasan ? it.kemasan || '' : it.ukuran ? `per ${it.ukuran}` : '';
+}
+
+/** Pemisah antara harga per kemasan dan harga eceran. */
+export const PRICE_SEP = '  |  '; // spasi tak terputus agar jaraknya tetap lebar
+
 export function priceLabel(it) {
   if (it.berkemasan) {
     let s = `${rp(it.hargaKemasan)}/${it.kemasan}`;
-    if (it.bisaEcer) s += ` · ecer ${rp(it.hargaEcer)}/${it.bentukEcer}`;
+    if (it.bisaEcer) s += `${PRICE_SEP}${rp(it.hargaEcer)}/${it.bentukEcer}`;
     return s;
   }
   return `${rp(it.harga)}/${it.ukuran}`;

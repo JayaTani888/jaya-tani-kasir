@@ -8,7 +8,7 @@
 //   bila beberapa HP dipakai bersamaan saat offline.
 
 import * as db from './db.js';
-import { round, norm, fullName, fmtNum, localDate, stockUnit } from './format.js';
+import { round, norm, fullName, fmtNum, localDate, stockUnit, metricLabel, variantTag } from './format.js';
 
 export const state = { items: new Map(), outbox: [], meta: {} };
 
@@ -18,6 +18,7 @@ export function onChange(fn) {
   return () => listeners.delete(fn);
 }
 function emit() {
+  twins = null;
   listeners.forEach((fn) => {
     try { fn(); } catch (e) { console.error(e); }
   });
@@ -65,6 +66,29 @@ export function activeItems() {
   return [...state.items.values()]
     .filter((it) => !it.dihapus)
     .sort((a, b) => a.nama.localeCompare(b.nama, 'id') || fullName(a).localeCompare(fullName(b), 'id'));
+}
+
+// ---- Nama tampilan: "AJI BASS 1 Liter"; kemasan hanya ditambahkan bila ada kembaran ----
+let twins = null;
+const twinKey = (it) => `${norm(it.nama)}|${norm(metricLabel(it))}`;
+function twinCounts() {
+  if (!twins) {
+    twins = new Map();
+    for (const it of state.items.values()) if (!it.dihapus) twins.set(twinKey(it), (twins.get(twinKey(it)) || 0) + 1);
+  }
+  return twins;
+}
+
+/** Nama barang untuk ditampilkan di aplikasi (bukan untuk spreadsheet). */
+export function itemName(it) {
+  if (!it) return '';
+  const m = metricLabel(it);
+  let s = m ? `${it.nama} ${m}` : it.nama;
+  if (!it.dihapus && (twinCounts().get(twinKey(it)) || 0) > 1) {
+    const tag = variantTag(it);
+    if (tag) s += ` · ${tag}`;
+  }
+  return s;
 }
 
 /** Daftar nilai unik (untuk dropdown Tipe, Kemasan, Satuan, dst.) + nilai bawaan. */
@@ -193,7 +217,7 @@ export function saveTransaksi(lines, bayar) {
       deviceId: state.meta.deviceId,
       deviceCode: state.meta.deviceCode,
       lines: lines.map((l) => ({
-        itemId: l.itemId, tipe: l.tipe, nama: l.nama, variant: l.variant, mode: l.mode,
+        itemId: l.itemId, tipe: l.tipe, nama: l.nama, variant: l.variant, label: l.label, mode: l.mode,
         qty: l.qty, unit: l.unit, price: l.price, subtotal: l.subtotal,
       })),
     };

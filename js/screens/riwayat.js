@@ -36,7 +36,7 @@ export function RiwayatScreen() {
       h('ul', { class: 'trx-lines' },
         t.lines.map((l) =>
           h('li', null,
-            h('span', null, `${l.nama}${l.variant && l.mode !== 'ukuran' ? ` (${l.variant})` : ''}`, h('span', { class: 'muted small' }, ` · ${fmtNum(l.qty)} ${l.unit} × ${rp(l.price)}`)),
+            h('span', null, l.label || `${l.nama}${l.variant && l.mode !== 'ukuran' ? ` (${l.variant})` : ''}`, h('span', { class: 'muted small' }, ` · ${fmtNum(l.qty)} ${l.unit} × ${rp(l.price)}`)),
             h('span', null, rp(l.subtotal))))),
       t.bayar != null ? h('div', { class: 'trx-pay muted small' }, `Uang diterima ${rp(t.bayar)} · Kembalian ${rp(t.kembalian)}`) : null);
     d.addEventListener('toggle', () => (d.open ? openIds.add(t.id) : openIds.delete(t.id)));

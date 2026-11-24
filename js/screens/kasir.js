@@ -2,14 +2,19 @@
 
 import { h, icon, textField, choice, toast, modal, confirmDialog, stokNode } from '../ui.js';
 import { itemPicker } from '../picker.js';
-import { state, setMeta, getStok, saveTransaksi, onChange } from '../store.js';
+import { state, setMeta, getStok, saveTransaksi, onChange, itemName } from '../store.js';
 import { rp, fmtNum, round, variantLabel, priceLabel } from '../format.js';
 import { scheduleSync } from '../sync.js';
 
 const unitOf = (it, mode) => (mode === 'kemasan' ? it.kemasan : mode === 'ecer' ? it.bentukEcer : it.ukuran) || '';
 const priceOf = (it, mode) => Number(mode === 'kemasan' ? it.hargaKemasan : mode === 'ecer' ? it.hargaEcer : it.harga) || 0;
 const baseQty = (mode, qty, isi) => (mode === 'ecer' ? qty / isi : qty);
-const lineName = (l) => l.nama + (l.berkemasan && l.variant ? ` (${l.variant})` : '');
+// "AMIFOS 5 Liter" (tanpa kemasan; satuannya sudah terlihat di baris "5 Jerigen × …").
+const lineName = (l) => {
+  const it = state.items.get(l.itemId);
+  if (it) return itemName(it);
+  return l.label || l.nama + (l.berkemasan && l.variant ? ` (${l.variant})` : '');
+};
 
 function payOptions(total) {
   const s = new Set([total]);
@@ -61,8 +66,8 @@ export function KasirScreen() {
     if (item.berkemasan && item.bisaEcer) {
       modeChoice = choice({
         options: [
-          { value: 'kemasan', label: `Kemasan (${item.kemasan})` },
-          { value: 'ecer', label: `Eceran (${item.bentukEcer})` },
+          { value: 'kemasan', label: item.kemasan },
+          { value: 'ecer', label: item.bentukEcer },
         ],
         value: 'kemasan',
         onChange: updateUnit,
@@ -135,14 +140,14 @@ export function KasirScreen() {
       same.subtotal = Math.round(same.qty * same.price);
     } else {
       cart.lines.push({
-        key, itemId: it.id, tipe: it.tipe, nama: it.nama, variant: variantLabel(it),
+        key, itemId: it.id, tipe: it.tipe, nama: it.nama, variant: variantLabel(it), label: itemName(it),
         berkemasan: it.berkemasan, kemasan: it.kemasan, ukuran: it.ukuran,
         mode: m, unit, price, isi, qty: q, subtotal: Math.round(q * price),
       });
     }
     saveCart();
     renderCart();
-    toast(`${it.nama} ditambahkan`, 'ok', 1500);
+    toast(`${itemName(it)} ditambahkan`, 'ok', 1500);
     // Tipe ikut dikosongkan agar barang berikutnya bisa langsung dicari dari semua tipe.
     picker.reset({ focus: window.matchMedia('(pointer: fine)').matches });
   }

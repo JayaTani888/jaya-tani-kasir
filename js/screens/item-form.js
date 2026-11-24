@@ -1,8 +1,7 @@
 // Formulir data barang (dipakai "Input Data Barang Baru" dan "Update Data Barang Tersedia").
 
 import { h, icon, textField, combobox, choice, YA_TIDAK, toast, confirmDialog } from '../ui.js';
-import { distinct, saveItem, deleteItem, findDuplicate, getStok } from '../store.js';
-import { fullName } from '../format.js';
+import { distinct, saveItem, deleteItem, findDuplicate, getStok, itemName } from '../store.js';
 import { scheduleSync } from '../sync.js';
 
 const DEF_KEMASAN = ['Karung', 'Jerigen', 'Botol', 'Sachet', 'Dus', 'Bungkus', 'Slop', 'Kaleng', 'Pak', 'Renteng'];
@@ -131,7 +130,7 @@ export function itemForm({ item = null, initial = {}, onCancel, onSaved, onDelet
     saveBtn.disabled = true;
     try {
       const saved = await saveItem(item ? { ...out, id: item.id } : out);
-      toast(`“${fullName(saved)}” tersimpan`, 'ok');
+      toast(`“${itemName(saved)}” tersimpan`, 'ok');
       scheduleSync();
       onSaved?.(saved);
     } catch (e) {
@@ -144,7 +143,7 @@ export function itemForm({ item = null, initial = {}, onCancel, onSaved, onDelet
 
   async function del() {
     const ok = await confirmDialog(
-      `Hapus “${fullName(item)}”? Barang tidak akan muncul lagi di Kasir dan Update Stok. Riwayat transaksinya tetap tersimpan.`,
+      `Hapus “${itemName(item)}”? Barang tidak akan muncul lagi di Kasir dan Update Stok. Riwayat transaksinya tetap tersimpan.`,
       { title: 'Hapus barang', okText: 'Hapus', okClass: 'btn-cancel' },
     );
     if (!ok) return;

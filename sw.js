@@ -1,7 +1,8 @@
 // Service worker: menyimpan file aplikasi agar tetap bisa dibuka tanpa internet.
 // PENTING: naikkan VERSION setiap kali file aplikasi diperbarui di hosting,
 // supaya HP mengunduh versi baru.
-const VERSION = '1.0.4';
+// Angka ini juga tampil di Beranda ("Versi 1.1.0").
+const VERSION = '1.1.0';
 const CACHE = `jaya-tani-kasir-${VERSION}`;
 // Halaman utama disimpan dengan kunci './' (bukan 'index.html'), karena
 // sebagian hosting (mis. Cloudflare Pages) mengalihkan /index.html ke /.
@@ -17,6 +18,7 @@ const ASSETS = [
   'js/store.js',
   'js/sync.js',
   'js/ui.js',
+  'js/version.js',
   'js/screens/home.js',
   'js/screens/input.js',
   'js/screens/item-form.js',
@@ -73,6 +75,7 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('message', (e) => {
   if (e.data === 'SKIP_WAITING') self.skipWaiting();
+  else if (e.data && e.data.type === 'version' && e.ports[0]) e.ports[0].postMessage(VERSION);
 });
 
 self.addEventListener('fetch', (e) => {
@@ -89,7 +92,7 @@ self.addEventListener('fetch', (e) => {
       const key = nav ? PAGE : req;
       if (DEV) {
         try {
-          const res = await clean(await fetch(req));
+          const res = await clean(await fetch(nav ? req : new Request(req.url, { cache: 'no-cache' })));
           if (res.ok) cache.put(key, res.clone());
           return res;
         } catch {

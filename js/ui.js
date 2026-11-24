@@ -148,7 +148,14 @@ export function combobox({ label, required = false, getOptions, allowNew = false
   function render(q) {
     const all = opts();
     const nq = norm(q);
-    filtered = nq ? all.filter((o) => norm([o.label, o.sub, o.search].filter(Boolean).join(' ')).includes(nq)) : all.slice();
+    // Setiap kata yang diketik cukup ada di mana saja: "bimoli pouch", "aji 5".
+    const words = nq.split(' ').filter(Boolean);
+    filtered = nq
+      ? all.filter((o) => {
+          const hay = norm([o.label, o.sub, o.search].filter(Boolean).join(' '));
+          return words.every((w) => hay.includes(w));
+        })
+      : all.slice();
     // Pilihan yang sudah ada didahulukan; "Tambah …" diletakkan paling bawah.
     if (allowNew && nq && !all.some((o) => norm(o.label) === nq)) filtered.push({ value: q.trim(), label: q.trim(), isNew: true });
     const selIdx = filtered.findIndex((o) => o.value === selected);

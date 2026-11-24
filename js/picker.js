@@ -2,8 +2,8 @@
 // Barang dengan nama sama tapi kemasan berbeda dibedakan lewat keterangan kemasan & harga.
 
 import { combobox, h, icon } from './ui.js';
-import { state, activeItems, distinct, getStok } from './store.js';
-import { norm, fullName, variantLabel, priceLabel, stokText } from './format.js';
+import { state, activeItems, distinct, getStok, itemName } from './store.js';
+import { norm, priceLabel, stokText } from './format.js';
 
 export function itemPicker({ onPick, tipeRequired = false, showStock = true } = {}) {
   let picked = null;
@@ -34,12 +34,11 @@ export function itemPicker({ onPick, tipeRequired = false, showStock = true } = 
         .filter((it) => !tipe.value || norm(it.tipe) === norm(tipe.value))
         .map((it) => ({
           value: it.id,
-          label: it.nama,
-          display: fullName(it),
-          sub: [it.berkemasan ? variantLabel(it) : null, priceLabel(it), showStock ? `Stok ${stokText(it, getStok(it))}` : null]
-            .filter(Boolean)
-            .join(' · '),
-          search: it.tipe,
+          // "AJI BASS 1 Liter" — kemasan hanya muncul bila ada barang kembar.
+          label: itemName(it),
+          sub: [priceLabel(it), showStock ? `Stok ${stokText(it, getStok(it))}` : null].filter(Boolean).join(' · '),
+          // Tetap bisa dicari dengan mengetik tipe atau kemasan (mis. "jerigen").
+          search: [it.tipe, it.kemasan, it.ukuran].filter(Boolean).join(' '),
         })),
     placeholderEmpty: 'Belum ada barang. Tambahkan lewat “Input Data Barang Baru”.',
     onChange: (id) => {
