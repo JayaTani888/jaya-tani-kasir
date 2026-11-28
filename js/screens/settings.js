@@ -1,6 +1,9 @@
 // Pengaturan koneksi ke Google Sheets + status sinkron.
 
-import { h, icon, textField } from '../ui.js';
+import { h, icon, textField, choice, toast } from '../ui.js';
+import { strukSettings, STRUK_DEFAULT, contohTrx } from '../struk.js';
+import { btSupported, pickPrinter, printerName } from '../printer.js';
+import { cetak } from '../struk-ui.js';
 import { state, setMeta, onChange, activeItems } from '../store.js';
 import { callApi, syncNow, describeStatus, onSync, isConfigured, syncState, NetError } from '../sync.js';
 
@@ -75,6 +78,51 @@ export function SettingsScreen() {
   const offs = [onSync(upd), onChange(upd)];
   upd();
 
+  // ---- Struk & printer ----
+  const ss = strukSettings();
+  const fToko = textField({ label: 'Nama toko di struk', value: ss.namaToko });
+  const fAlamat = textField({ label: 'Alamat (opsional)', value: ss.alamat });
+  const fTelp = textField({ label: 'No. telp toko (opsional)', value: ss.telp });
+  const fPesan = textField({ label: 'Pesan di bawah struk (opsional)', value: ss.pesan });
+  const fLebar = choice({
+    options: [{ value: 32, label: 'Kertas 58 mm' }, { value: 48, label: 'Kertas 80 mm' }],
+    value: Number(ss.lebar) === 48 ? 48 : 32,
+  });
+  const printerSt = h('div', { class: 'muted small' });
+  const updPrinter = () => {
+    printerSt.textContent = !btSupported()
+      ? 'Perangkat/browser ini tidak bisa cetak langsung lewat Bluetooth (perlu HP Android + Chrome). Struk tetap bisa dibagikan ke WhatsApp.'
+      : printerName() ? `Printer: ${printerName()}` : 'Belum ada printer dipilih.';
+  };
+  updPrinter();
+  async function saveStruk(silent = false) {
+    await setMeta('struk', {
+      namaToko: fToko.value || STRUK_DEFAULT.namaToko, alamat: fAlamat.value, telp: fTelp.value, pesan: fPesan.value, lebar: fLebar.value,
+    });
+    if (!silent) toast('Pengaturan struk tersimpan', 'ok');
+  }
+  const pickBtn = h('button', {
+    type: 'button',
+    class: 'btn btn-ghost btn-sm',
+    onclick: async () => {
+      try {
+        const n = await pickPrinter();
+        toast(`Tersambung ke ${n}`, 'ok');
+      } catch (e) {
+        toast(e.message || String(e), 'err', 6000);
+      }
+      updPrinter();
+    },
+  }, icon('printer', 18), 'Pilih printer');
+  const testBtn = h('button', { type: 'button', class: 'btn btn-print btn-sm' }, 'Tes cetak');
+  testBtn.addEventListener('click', async () => {
+    await saveStruk(true);
+    await cetak(contohTrx(), testBtn);
+    updPrinter();
+  });
+  pickBtn.disabled = !btSupported();
+  testBtn.disabled = !btSupported();
+
   const code = state.meta.deviceCode || 'ABC';
   const el = h('div', { class: 'page-settings' },
     h('section', { class: 'card form' },
@@ -85,6 +133,14 @@ export function SettingsScreen() {
       h('div', { class: 'actions start' }, saveBtn),
       result),
     h('section', { class: 'card sync-card' }, stEl, syncBtn),
+    h('section', { class: 'card form' },
+      h('h2', null, 'Struk & printer'),
+      printerSt,
+      h('div', { class: 'actions start' }, pickBtn, testBtn),
+      fToko.el, fAlamat.el, fTelp.el, fPesan.el,
+      h('div', { class: 'q' }, 'Ukuran kertas printer'), fLebar.el,
+      h('div', { class: 'actions start' }, h('button', { type: 'button', class: 'btn btn-save', onclick: () => saveStruk() }, 'Simpan pengaturan struk')),
+      h('p', { class: 'muted small' }, 'Pengaturan struk dan printer tersimpan di perangkat ini saja.')),
     h('section', { class: 'card' },
       h('h2', null, 'Perangkat ini'),
       h('dl', { class: 'kv' },

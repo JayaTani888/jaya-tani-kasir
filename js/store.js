@@ -197,28 +197,36 @@ export function changeStock(item, { jenis, delta, ket }) {
   });
 }
 
-export function saveTransaksi(lines, bayar) {
+/**
+ * Simpan transaksi. bayar = uang diterima (null = uang pas).
+ * Bila uang kurang, wajib ada bon = { nama, telp } → sisanya dicatat sebagai bon.
+ */
+export function saveTransaksi(lines, bayar, bon = null) {
   return exclusive(async () => {
     const now = new Date();
     const ms = now.getTime();
     const tanggal = localDate(now);
+    const total = lines.reduce((a, l) => a + l.subtotal, 0);
+    const paid = bayar == null ? total : Math.max(0, Math.round(bayar));
+    const sisa = Math.max(0, total - paid);
+    if (sisa > 0 && !(bon && String(bon.nama || '').trim())) throw new Error('Uang kurang: isi nama untuk catatan bon');
     const c = state.meta.trxCounter;
     const n = c && c.tanggal === tanggal ? c.n + 1 : 1;
     const noTrx = `${tanggal.slice(2).replace(/-/g, '')}-${state.meta.deviceCode}-${String(n).padStart(3, '0')}`;
-    const total = lines.reduce((a, l) => a + l.subtotal, 0);
     const trx = {
       id: uuid(),
       noTrx,
       waktu: ms,
       tanggal,
       total,
-      bayar: bayar ?? null,
-      kembalian: bayar == null ? null : bayar - total,
+      bayar: paid,
+      kembalian: Math.max(0, paid - total),
+      bon: sisa > 0 ? { id: uuid(), nama: String(bon.nama).trim(), telp: String(bon.telp || '').trim(), sisa } : null,
       deviceId: state.meta.deviceId,
       deviceCode: state.meta.deviceCode,
       lines: lines.map((l) => ({
         itemId: l.itemId, tipe: l.tipe, nama: l.nama, variant: l.variant, label: l.label, mode: l.mode,
-        qty: l.qty, unit: l.unit, price: l.price, subtotal: l.subtotal,
+        qty: l.qty, unit: l.unit, price: l.price, priceNormal: l.priceNormal ?? l.price, subtotal: l.subtotal,
       })),
     };
     const ops = [{ opId: uuid(), type: 'transaksi', data: trx, createdAt: ms }];
@@ -246,6 +254,50 @@ export function getTransaksiByDate(tanggal) {
   return db.getAllByIndex('transactions', 'tanggal', tanggal);
 }
 
+// ---- Catatan bon ----
+// Daftar bon dari server (disimpan di meta 'bons') + bon/pembayaran yang belum terkirim.
+
+export function bonList() {
+  const map = new Map((state.meta.bons || []).map((b) => [b.id, { ...b, pending: false }]));
+  for (const op of state.outbox) {
+    if (op.type !== 'transaksi' || !op.data.bon || map.has(op.data.bon.id)) continue;
+    const d = op.data;
+    map.set(d.bon.id, {
+      id: d.bon.id, trxId: d.id, noTrx: d.noTrx, waktu: d.waktu, nama: d.bon.nama, telp: d.bon.telp,
+      total: d.total, dibayar: d.bayar, sisa: d.bon.sisa, lunasPada: null, pending: true,
+    });
+  }
+  for (const op of state.outbox) {
+    if (op.type !== 'bayarBon') continue;
+    const b = map.get(op.data.bonId);
+    if (!b) continue;
+    b.dibayar += op.data.jumlah;
+    b.sisa = Math.max(0, b.sisa - op.data.jumlah);
+    if (b.sisa <= 0 && !b.lunasPada) b.lunasPada = op.data.waktu;
+    b.pending = true;
+  }
+  return [...map.values()].sort((a, b) => b.waktu - a.waktu);
+}
+
+/** Catat pembayaran (cicilan / pelunasan) sebuah bon. */
+export function bayarBon(bon, jumlah) {
+  return exclusive(async () => {
+    const now = Date.now();
+    const op = {
+      opId: uuid(),
+      type: 'bayarBon',
+      createdAt: now,
+      data: {
+        id: uuid(), bonId: bon.id, trxId: bon.trxId, noTrx: bon.noTrx, nama: bon.nama,
+        jumlah: Math.round(jumlah), waktu: now, deviceId: state.meta.deviceId, deviceCode: state.meta.deviceCode,
+      },
+    };
+    await db.tx(['outbox'], (t) => queueOps(t, [op]));
+    state.outbox.push(op);
+    emit();
+  });
+}
+
 function normalizeServerItem(s) {
   const num = (v) => (v === '' || v == null || isNaN(Number(v)) ? null : Number(v));
   const str = (v) => (v == null ? '' : String(v));
@@ -265,8 +317,22 @@ function normalizeServerItem(s) {
  * lalu ganti data barang dengan versi server (kecuali yang masih punya
  * perubahan lokal yang belum terkirim).
  */
-export function applySync(appliedIds, serverItems) {
+function normalizeServerBon(s) {
+  const n = (v) => (v === '' || v == null || isNaN(Number(v)) ? 0 : Number(v));
+  return {
+    id: String(s.id || ''), trxId: String(s.trxId || ''), noTrx: String(s.noTrx || ''), waktu: n(s.waktu),
+    nama: String(s.nama || ''), telp: String(s.telp || ''), total: n(s.total), dibayar: n(s.dibayar), sisa: n(s.sisa),
+    lunasPada: s.lunasPada ? n(s.lunasPada) : null,
+  };
+}
+
+export function applySync(appliedIds, serverItems, serverBons = null) {
   return exclusive(async () => {
+    if (Array.isArray(serverBons)) {
+      const bons = serverBons.map(normalizeServerBon).filter((b) => b.id);
+      state.meta.bons = bons;
+      await db.tx(['meta'], (t) => { t.put('meta', { key: 'bons', value: bons }); });
+    }
     const applied = new Set(appliedIds);
     const done = state.outbox.filter((o) => applied.has(o.opId));
     const remaining = state.outbox.filter((o) => !applied.has(o.opId));

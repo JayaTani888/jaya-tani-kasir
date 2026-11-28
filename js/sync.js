@@ -73,7 +73,7 @@ export async function syncNow() {
         deviceId: state.meta.deviceId,
         ops: batch.map((o) => ({ opId: o.opId, type: o.type, data: o.data })),
       });
-      await applySync(res.applied || [], res.items || []);
+      await applySync(res.applied || [], res.items || [], res.bons);
       if (!batch.length || !(res.applied || []).length || !state.outbox.length) break;
     }
     await setMeta('lastSyncAt', Date.now());

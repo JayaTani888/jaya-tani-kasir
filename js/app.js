@@ -10,6 +10,7 @@ import { KasirScreen } from './screens/kasir.js';
 import { StokScreen } from './screens/stok.js';
 import { RiwayatScreen } from './screens/riwayat.js';
 import { SettingsScreen } from './screens/settings.js';
+import { BonScreen } from './screens/bon.js';
 
 const routes = {
   '': HomeScreen,
@@ -18,6 +19,7 @@ const routes = {
   kasir: KasirScreen,
   stok: StokScreen,
   riwayat: RiwayatScreen,
+  bon: BonScreen,
   pengaturan: SettingsScreen,
 };
 

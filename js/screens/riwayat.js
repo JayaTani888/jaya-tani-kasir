@@ -3,6 +3,7 @@
 import { h } from '../ui.js';
 import { getTransaksiByDate, onChange } from '../store.js';
 import { rp, fmtNum, localDate, shiftDate, fmtDateLong, fmtTime } from '../format.js';
+import { strukButtons } from '../struk-ui.js';
 
 export function RiwayatScreen() {
   let tanggal = localDate();
@@ -32,13 +33,18 @@ export function RiwayatScreen() {
     const d = h('details', { class: 'trx', open: openIds.has(t.id) },
       h('summary', null,
         h('span', { class: 'trx-main' }, h('b', null, t.noTrx), h('span', { class: 'muted small' }, `${fmtTime(t.waktu)} · ${t.lines.length} barang`)),
-        h('span', { class: 'trx-side' }, h('b', null, rp(t.total)), h('span', { class: `badge ${t.synced ? '' : 'wait'}` }, t.synced ? 'Terkirim' : 'Menunggu'))),
+        h('span', { class: 'trx-side' }, h('b', null, rp(t.total)),
+          t.bon ? h('span', { class: 'badge bon' }, 'Bon') : null,
+          h('span', { class: `badge ${t.synced ? '' : 'wait'}` }, t.synced ? 'Terkirim' : 'Menunggu'))),
       h('ul', { class: 'trx-lines' },
         t.lines.map((l) =>
           h('li', null,
             h('span', null, l.label || `${l.nama}${l.variant && l.mode !== 'ukuran' ? ` (${l.variant})` : ''}`, h('span', { class: 'muted small' }, ` · ${fmtNum(l.qty)} ${l.unit} × ${rp(l.price)}`)),
             h('span', null, rp(l.subtotal))))),
-      t.bayar != null ? h('div', { class: 'trx-pay muted small' }, `Uang diterima ${rp(t.bayar)} · Kembalian ${rp(t.kembalian)}`) : null);
+      t.bon
+        ? h('div', { class: 'trx-pay small bon-line' }, `Dibayar ${rp(t.bayar)} · Bon atas nama ${t.bon.nama} · sisa saat belanja ${rp(t.bon.sisa)}`)
+        : t.bayar != null ? h('div', { class: 'trx-pay muted small' }, `Uang diterima ${rp(t.bayar)} · Kembalian ${rp(t.kembalian)}`) : null,
+      strukButtons(t));
     d.addEventListener('toggle', () => (d.open ? openIds.add(t.id) : openIds.delete(t.id)));
     return d;
   }

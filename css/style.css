@@ -1,13 +1,17 @@
-/* Jaya Tani Kasir — warna mengikuti desain (hijau / kuning / abu, tombol Batal merah muda, Simpan hijau muda). */
+/* Jaya Tani Kasir — warna mengikuti logo Toko Jaya Tani (hijau tua → hijau daun → hijau muda). */
 :root {
-  --bg: #f4f6f3;
+  --leaf-dark: #17611f;
+  --leaf: #2a8f2f;
+  --leaf-bright: #4cb33a;
+  --leaf-lime: #9ad857;
+  --bg: #f2f7ee;
   --surface: #ffffff;
   --text: #1d2420;
   --muted: #5d665f;
   --line: #7d847f;
   --line-soft: #d6dbd7;
   --field: #f2f3f2;
-  --primary: #2f6b3f;
+  --primary: #1f7a28;
   --danger: #b3261e;
   --danger-soft: #fbe9e7;
   --ok: #1e7a37;
@@ -18,7 +22,7 @@
   --btn-save-ink: #1d3b17;
   --btn-pick: #fff2cc;
   --btn-pick-ink: #4a3a00;
-  --total-line: #22c55e;
+  --total-line: #3aa53a;
   --radius: 10px;
   --shadow: 0 1px 2px rgba(16, 24, 20, 0.06), 0 4px 14px rgba(16, 24, 20, 0.06);
   --safe-b: env(safe-area-inset-bottom, 0px);
@@ -52,8 +56,9 @@ a { color: var(--primary); }
   align-items: center;
   gap: 6px;
   padding: calc(env(safe-area-inset-top, 0px) + 8px) 12px 8px;
-  background: var(--primary);
+  background: linear-gradient(100deg, var(--leaf-dark) 0%, var(--leaf) 62%, var(--leaf-bright) 100%);
   color: #fff;
+  box-shadow: 0 2px 10px rgba(23, 97, 31, 0.25);
 }
 .topbar h1 {
   flex: 1;
@@ -145,9 +150,30 @@ main {
 }
 .tile:active { transform: scale(0.98); }
 .tile svg { opacity: 0.75; }
-.tile-green { background: linear-gradient(#e1eedb, #93c47d); }
-.tile-yellow { background: linear-gradient(#fff4d6, #f8d468); }
+.tile-green { background: linear-gradient(#eef8e6, #b5df96); color: #1c4a1f; }
+.tile-yellow { background: linear-gradient(#fbfbe6, #e2ee8f); color: #3a4a12; }
 .tile-gray { background: linear-gradient(#f2f2f2, #a9a9a9); }
+.tile-green svg, .tile-yellow svg { color: #24702a; opacity: 0.9; }
+/* Kasir: hijau daun cerah seperti logo, paling menonjol */
+.tile-kasir {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(150deg, var(--leaf-lime) 0%, var(--leaf-bright) 40%, var(--leaf) 70%, var(--leaf-dark) 100%);
+  border-color: transparent;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 12px 28px rgba(38, 128, 44, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+.tile-kasir::before {
+  content: '';
+  position: absolute;
+  inset: -40% 35% 45% -25%;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0));
+  pointer-events: none;
+}
+.tile-kasir svg { color: #fff; opacity: 1; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25)); }
+.tile-kasir span, .tile-kasir svg { position: relative; }
+.tile-kasir:hover { filter: brightness(1.04); }
 
 /* Beranda: Kasir besar di atas, tiga menu lain di bawahnya */
 .tiles-home { display: grid; justify-items: center; gap: 20px; }
@@ -167,7 +193,12 @@ main {
 .sync-card { margin-top: 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
 .sync-card .st { flex: 1 1 240px; display: flex; flex-direction: column; gap: 2px; }
 .sync-card .st b { display: flex; align-items: center; gap: 8px; }
-.links { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.links { margin-top: 14px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 600px) {
+  .links { gap: 8px; }
+  .links .link-btn { position: relative; flex-direction: column; justify-content: center; gap: 6px; min-height: 78px; padding: 10px 6px; font-size: 14px; line-height: 1.2; text-align: center; }
+  .links .count-badge { position: absolute; top: 6px; right: 6px; }
+}
 .link-btn {
   display: flex;
   align-items: center;
@@ -341,7 +372,14 @@ body.is-home main { padding-bottom: calc(80px + var(--safe-b)); }
 .btn:active { filter: brightness(0.95); }
 .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
 .btn-cancel { background: var(--btn-cancel); color: var(--btn-cancel-ink); }
-.btn-save { background: var(--btn-save); color: var(--btn-save-ink); }
+.btn-save {
+  background: linear-gradient(180deg, var(--leaf-bright), var(--leaf));
+  border-color: var(--leaf-dark);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(38, 128, 44, 0.25);
+}
+.btn-save[disabled] { background: var(--btn-save); border-color: rgba(0, 0, 0, 0.08); color: var(--btn-save-ink); box-shadow: none; }
+.btn-print { background: #fff; border: 1.5px solid var(--leaf); color: var(--leaf-dark); }
 .btn-pick { background: var(--btn-pick); color: var(--btn-pick-ink); }
 .btn-ghost { background: #fff; border-color: var(--line-soft); color: var(--text); }
 .btn-sm { min-height: 42px; padding: 0 14px; font-size: 15px; }
@@ -412,14 +450,21 @@ body.is-home main { padding-bottom: calc(80px + var(--safe-b)); }
   padding: 12px 16px;
   border: 2px solid var(--total-line);
   border-radius: 10px;
-  background: #f3fdf6;
+  background: #f1faea;
   color: #333;
   font-size: 17px;
   font-weight: 800;
 }
 .total-box .amt { font-size: 22px; font-variant-numeric: tabular-nums; }
 .cart-panel .actions { margin-top: 14px; }
+/* Uang pas / Bon di samping tombol Selesai */
+.pay-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 14px; }
+.pay-row .btn { flex: 0 0 auto; min-width: 160px; }
+.pay-choice { gap: 22px; }
 .mobile-bar { display: none; }
+/* Kasir: tombol "Ubah harga" */
+.preview-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.price-btn { min-height: 38px; font-size: 14px; }
 
 @media (min-width: 880px) {
   .kasir { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); align-items: start; gap: 36px; }
@@ -435,16 +480,18 @@ body.is-home main { padding-bottom: calc(80px + var(--safe-b)); }
     bottom: 0;
     z-index: 15;
     display: flex;
-    align-items: stretch;
-    gap: 12px;
-    padding: 10px 16px calc(10px + var(--safe-b));
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 16px calc(10px + var(--safe-b));
     background: #fff;
     box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.1);
   }
+  .mobile-bar .pay-row-m .check { min-height: 34px; }
+  .mobile-bar .bar-main { display: flex; align-items: stretch; gap: 12px; }
   .mobile-bar .total-box { flex: 1; min-width: 0; margin: 0; padding: 8px 14px; }
   .mobile-bar .total-box .amt { font-size: 20px; }
   .mobile-bar .btn { flex: 0 0 auto; }
-  body.has-bar main { padding-bottom: calc(110px + var(--safe-b)); }
+  body.has-bar main { padding-bottom: calc(160px + var(--safe-b)); }
 }
 
 .quick { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -460,7 +507,55 @@ body.is-home main { padding-bottom: calc(80px + var(--safe-b)); }
 .chip:hover { background: #edf5ea; }
 .kembali { min-height: 26px; font-size: 18px; font-weight: 700; }
 .kembali.pos { color: var(--ok); }
-.kembali.neg { color: var(--danger); }
+.kembali.neg { color: #b45309; }
+.chip-bon { border-color: #f0c38a; color: #8a4b00; background: #fff8ee; }
+.chip-bon:hover { background: #ffefd9; }
+.price-changed { color: #b45309; font-style: normal; font-weight: 600; }
+
+/* Bon di jendela Selesai */
+.bon-box { display: grid; gap: 10px; padding: 12px; border: 1px solid #f3d3a6; border-radius: 12px; background: #fff8ee; }
+.bon-note { color: #8a4b00; font-size: 14px; font-weight: 600; }
+
+/* Ringkasan setelah transaksi tersimpan */
+.result-big { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 12px 16px; border-radius: 12px; background: #f1faea; }
+.result-big span { font-weight: 700; }
+.result-big b { font-size: 30px; color: var(--leaf-dark); font-variant-numeric: tabular-nums; }
+.result-big.bon { background: #fff4e5; }
+.result-big.bon b { color: #b45309; }
+.struk-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.trx .struk-btns { padding: 0 14px 12px; }
+
+/* Catatan Bon */
+.page-bon { max-width: 760px; }
+.page-bon .day-sum { margin-top: 0; }
+.seg { display: flex; gap: 4px; margin: 14px 0 12px; padding: 4px; border-radius: 12px; background: #e3eedd; }
+.seg-btn { flex: 1; min-height: 40px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font-weight: 600; cursor: pointer; }
+.seg-btn.on { background: #fff; color: var(--leaf-dark); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+.bon-list { display: grid; gap: 10px; margin-top: 12px; }
+.bon-card { display: grid; gap: 6px; }
+.bon-card.lunas { opacity: 0.85; }
+.bon-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.bon-nama { display: block; font-size: 17px; }
+.bon-telp { display: inline-flex; align-items: center; gap: 4px; margin-top: 2px; font-size: 14px; text-decoration: none; }
+.bon-sisa { display: flex; flex-direction: column; align-items: flex-end; }
+.bon-sisa b { font-size: 20px; color: #b45309; font-variant-numeric: tabular-nums; }
+.bon-card .badge.wait { margin-left: 6px; }
+.badge.bon { background: #ffedd5; color: #9a3412; }
+.bon-line { color: #8a4b00; }
+.count-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  margin-left: auto;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #e8590c;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+.count-badge:empty { display: none; }
 
 /* ---------- Riwayat ---------- */
 .page-riwayat { max-width: 760px; }
@@ -543,7 +638,21 @@ body.is-home main { padding-bottom: calc(80px + var(--safe-b)); }
   gap: 8px;
   pointer-events: none;
 }
-@media (max-width: 879px) { body.has-bar #toast-root { bottom: calc(96px + var(--safe-b)); } }
+@media (max-width: 879px) { body.has-bar #toast-root { bottom: calc(150px + var(--safe-b)); } }
+.toast-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.toast-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
 .toast {
   padding: 12px 16px;
   border-radius: 10px;

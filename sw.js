@@ -2,7 +2,7 @@
 // PENTING: naikkan VERSION setiap kali file aplikasi diperbarui di hosting,
 // supaya HP mengunduh versi baru.
 // Angka ini juga tampil di Beranda ("Versi 1.1.0").
-const VERSION = '1.1.0';
+const VERSION = '1.2.1';
 const CACHE = `jaya-tani-kasir-${VERSION}`;
 // Halaman utama disimpan dengan kunci './' (bukan 'index.html'), karena
 // sebagian hosting (mis. Cloudflare Pages) mengalihkan /index.html ke /.
@@ -15,10 +15,14 @@ const ASSETS = [
   'js/db.js',
   'js/format.js',
   'js/picker.js',
+  'js/printer.js',
   'js/store.js',
+  'js/struk.js',
+  'js/struk-ui.js',
   'js/sync.js',
   'js/ui.js',
   'js/version.js',
+  'js/screens/bon.js',
   'js/screens/home.js',
   'js/screens/input.js',
   'js/screens/item-form.js',
